@@ -14,9 +14,9 @@ public class ResponseTimeInterceptor implements IClientInterceptor {
     }
 
     @Override
-    public void interceptResponse(IHttpResponse theResponse) {
+    public void interceptResponse(IHttpResponse response) {
         requestCount++;
-        totalResponseTime += theResponse.getRequestStopWatch().getMillis();
+        totalResponseTime += response.getRequestStopWatch().getMillis();
     }
 
     public double getAverageResponseTime() {
