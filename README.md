@@ -44,5 +44,11 @@ This project is a skeleton project for using [HAPI FHIR](https://hapifhir.io) to
 
 * [x] Commit your work
 
+### Further enhancements:
+1. The entry point for the application(main method) can be separated from the SampleClient.
+2. Batching can be used to reduce the number of API calls made to the server. It could be done by changing the type of 
+    Bundle and then using BundleEntryComponent to accumulate the last names from that batch to query. 
+3. performPatientSearch method can be made asynchronous to return CompletableFuture<Bundle> instead of Bundle.
+
 Note: Caching can also be disabled by sleeping for > 61s duration before the next batch of requests and we'd get a cache miss
   Reference: https://smilecdr.com/docs/fhir_storage_relational/performance_and_caching.html
