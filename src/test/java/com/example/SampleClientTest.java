@@ -1,50 +1,28 @@
 package com.example;
-import java.lang.reflect.InvocationTargetException;
-import java.util.Arrays;
-import java.util.List;
-import java.lang.reflect.Method;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
-import org.junit.Before;
-import org.junit.Test;
+
 import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
 import ca.uhn.fhir.rest.client.interceptor.LoggingInterceptor;
 import org.hl7.fhir.r4.model.Bundle;
 import org.hl7.fhir.r4.model.Patient;
-
-
+import java.util.Arrays;
+import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import org.junit.Before;
+import org.junit.Test;
 import static junit.framework.TestCase.*;
+import static org.mockito.Mockito.*;
 
 public class SampleClientTest {
     private SampleClient sampleClient;
     private IGenericClient client;
-    private Method performPatientSearchMethod;
-    private Method readLastNamesFromFileMethod;
-    private Method createFhirClientForR4;
-    private Method handleFutureExecutionMethod;
-    private Method printPatientInformationMethod;
     @Before
     public void setUp() {
         sampleClient = new SampleClient();
         FhirContext fhirContext = FhirContext.forR4();
         client = fhirContext.newRestfulGenericClient("http://hapi.fhir.org/baseR4");
         client.registerInterceptor(new LoggingInterceptor(false));
-        performPatientSearchMethod = getReflectionMethod(SampleClient.class, "performPatientSearch", IGenericClient.class, String.class);
-        readLastNamesFromFileMethod = getReflectionMethod(SampleClient.class, "readLastNamesFromFile", String.class);
-        createFhirClientForR4 = getReflectionMethod(SampleClient.class, "createFhirClientForR4");
-        handleFutureExecutionMethod = getReflectionMethod(SampleClient.class, "handleFutureExecution", CompletableFuture.class);
-        printPatientInformationMethod = getReflectionMethod(SampleClient.class, "printPatientInformation", Bundle.class);
-    }
-    private Method getReflectionMethod(Class<?> targetClass, String methodName, Class<?>... parameterTypes) {
-        try {
-            Method method = targetClass.getDeclaredMethod(methodName, parameterTypes);
-            method.setAccessible(true);
-            return method;
-        } catch (NoSuchMethodException e) {
-            fail("An error occurred while accessing the methods: " + e.getMessage());
-            return null; // unreachable code, added to satisfy the compiler
-        }
     }
     @SuppressWarnings("unchecked")
     @Test
@@ -53,69 +31,43 @@ public class SampleClientTest {
         CompletableFuture<Void> future = CompletableFuture.completedFuture(null);
 
         // Invoke the handleFutureExecution method
-        try {
-            handleFutureExecutionMethod.invoke(sampleClient, future);
-        } catch (IllegalAccessException | InvocationTargetException e) {
-            fail("Error occurred during test execution: " + e.getMessage());
-            return;
-        }
+        sampleClient.handleFutureExecution(future);
     }
     @SuppressWarnings("unchecked")
     @Test
-    public void testHandleFutureExecution_InterruptedException() throws IllegalAccessException {
+    public void testHandleFutureExecution_InterruptedException() {
         CompletableFuture<Void> future = new CompletableFuture<>();
-        future.completeExceptionally(new InterruptedException("Test exception"));
+        future.completeExceptionally(new InterruptedException("Simulated InterruptedException"));
 
         // Verify the behavior when the future throws an InterruptedException
         try {
-            handleFutureExecutionMethod.invoke(null, future);
-            fail("Expected RuntimeException to be thrown");
-        } catch (InvocationTargetException e) {
-            if (e.getCause() instanceof RuntimeException) {
-                String expectedErrorMessage = "Error occurred during the execution of the future";
-                String actualErrorMessage = e.getCause().getMessage();
-                assertTrue(actualErrorMessage.contains(expectedErrorMessage));
-            } else {
-                // Catch any exceptions during re-throwing and fail the test
-                try {
-                    throw e.getCause();
-                } catch (Throwable throwable) {
-                    fail("Unexpected exception occurred during re-throwing: " + throwable.getMessage());
-                }
-            }
+            sampleClient.handleFutureExecution(future);
+        } catch (RuntimeException e) {
+            String expectedErrorMessage = "Simulated InterruptedException";
+            String actualErrorMessage = e.getCause().getMessage();
+            assertTrue(actualErrorMessage.contains(expectedErrorMessage));
         }
     }
     @SuppressWarnings("unchecked")
     @Test
-    public void testHandleFutureExecution_ExecutionException() throws InvocationTargetException, IllegalAccessException {
+    public void testHandleFutureExecution_ExecutionException() {
         CompletableFuture<Void> future = new CompletableFuture<>();
-        future.completeExceptionally(new ExecutionException("Test exception", null));
+        future.completeExceptionally(new ExecutionException("Simulated ExecutionException", new RuntimeException()));
 
         // Verify the behavior when the future throws an ExecutionException
         try {
-            handleFutureExecutionMethod.invoke(null, future);
-            fail("Expected RuntimeException to be thrown");
-        } catch (InvocationTargetException e) {
-            if (e.getCause() instanceof RuntimeException) {
-                String expectedErrorMessage = "Error occurred during the execution of the future";
-                String actualErrorMessage = e.getCause().getMessage();
-                assertTrue(actualErrorMessage.contains(expectedErrorMessage));
-            } else {
-                fail("Unexpected exception occurred during re-throwing: " + e.getCause().getMessage());
-            }
+            sampleClient.handleFutureExecution(future);
+        } catch (RuntimeException e) {
+            String expectedErrorMessage = "Simulated ExecutionException";
+            String actualErrorMessage = e.getCause().getMessage();
+            assertTrue(actualErrorMessage.contains(expectedErrorMessage));
         }
     }
     @SuppressWarnings("unchecked")
     @Test
     public void testCreateFhirClientForR4() {
         // Invoke the method under test
-        IGenericClient client;
-        try {
-            client = (IGenericClient) createFhirClientForR4.invoke(null);
-        } catch (IllegalAccessException | InvocationTargetException e) {
-            fail("Error occurred during test execution: " + e.getMessage());
-            return;
-        }
+        IGenericClient client = sampleClient.createFhirClientForR4();
 
         // Verify that the returned IGenericClient instance is not null
         assertNotNull(client);
@@ -139,27 +91,23 @@ public class SampleClientTest {
         List<String> expectedLastNames = Arrays.asList("Smith", "Johnson", "Doe");
 
         // Perform readLastNamesFromFile
-        List<String> lastNames;
-        try {
-            lastNames = (List<String>) readLastNamesFromFileMethod.invoke(sampleClient, fileName);
-        } catch (IllegalAccessException | InvocationTargetException e) {
-            fail("Error occurred during test execution: " + e.getMessage());
-            return;
-        }
+        List<String> lastNames = sampleClient.readLastNamesFromFile(fileName);
+
         // Verify the result
         assertNotNull(lastNames);
         assertEquals(expectedLastNames, lastNames);
     }
     @SuppressWarnings("unchecked")
     @Test(expected = RuntimeException.class)
-    public void testReadLastNamesFromFile_FileNotFound() throws Throwable {
+    public void testReadLastNamesFromFile_FileNotFound() {
         String nonExistentFileName = "non_existent_file.txt";
+
         try {
-            List<String> lastNames = (List<String>) readLastNamesFromFileMethod.invoke(sampleClient, nonExistentFileName);
-        } catch (InvocationTargetException e) {
-            throw e.getCause();  // Throw the cause of the InvocationTargetException (i.e., the RuntimeException)
-        } catch (IllegalAccessException e) {
-            fail("Error occurred during test execution: " + e.getMessage());
+            List<String> lastNames = sampleClient.readLastNamesFromFile(nonExistentFileName);
+            fail("Expected exception not thrown");
+        } catch (RuntimeException e) {
+            assertTrue(e.getMessage().contains("Error reading last names from file: "));
+            throw e;
         }
     }
     @SuppressWarnings("unchecked")
@@ -169,13 +117,8 @@ public class SampleClientTest {
         String lastName = "Smith";
 
         // Perform the patient search
-        Bundle resultBundle;
-        try {
-            resultBundle = (Bundle) performPatientSearchMethod.invoke(sampleClient, client, lastName);
-        } catch (IllegalAccessException | InvocationTargetException e) {
-            fail("Error occurred during test execution: " + e.getMessage());
-            return;
-        }
+        Bundle resultBundle = sampleClient.performPatientSearch( client, lastName);
+
         assertNotNull(resultBundle);
         Patient patient = (Patient) resultBundle.getEntry().get(0).getResource();
 
@@ -189,15 +132,36 @@ public class SampleClientTest {
         String lastName = "###"; //invalid last name
 
         // Perform the patient search
-        Bundle resultBundle;
-        try {
-            resultBundle = (Bundle) performPatientSearchMethod.invoke(sampleClient, client, lastName);
-        } catch (IllegalAccessException | InvocationTargetException e) {
-            fail("Error occurred during test execution: " + e.getMessage());
-            return;
-        }
+        Bundle resultBundle = sampleClient.performPatientSearch( client, lastName);
 
         // Verify the returned list is empty
         assertTrue(resultBundle.getEntry().isEmpty());
+    }
+    @Test
+    public void testDisableCaching_RegisterCacheControlInterceptor() {
+        // Create a mock IGenericClient
+        IGenericClient mockedClient = mock(IGenericClient.class);
+
+        // Invoke the method under test
+        sampleClient.disableCaching(mockedClient);
+
+        // Verify that the CacheControlInterceptor is registered
+        verify(mockedClient).registerInterceptor(any(CacheControlInterceptor.class));
+    }
+    @Test
+    public void testDisableCaching_RegisterCacheControlInterceptor_Failure() {
+        // Create a mock IGenericClient
+        IGenericClient mockedClient = mock(IGenericClient.class);
+
+        // Throw an exception when trying to register the interceptor
+        doThrow(new RuntimeException("Failed to register interceptor")).when(mockedClient).registerInterceptor(any(CacheControlInterceptor.class));
+
+        // Invoke the method under test
+        try {
+            sampleClient.disableCaching(mockedClient);
+            fail("Expected exception not thrown");
+        } catch (RuntimeException e) {
+            assertEquals("Failed to register interceptor", e.getMessage());
+        }
     }
 }
