@@ -24,7 +24,6 @@ public class SampleClientTest {
         client = fhirContext.newRestfulGenericClient("http://hapi.fhir.org/baseR4");
         client.registerInterceptor(new LoggingInterceptor(false));
     }
-    @SuppressWarnings("unchecked")
     @Test
     public void testHandleFutureExecution_SuccessfulCompletion() {
         // Prepare test data
@@ -33,7 +32,6 @@ public class SampleClientTest {
         // Invoke the handleFutureExecution method
         sampleClient.handleFutureExecution(future);
     }
-    @SuppressWarnings("unchecked")
     @Test
     public void testHandleFutureExecution_InterruptedException() {
         CompletableFuture<Void> future = new CompletableFuture<>();
@@ -48,7 +46,6 @@ public class SampleClientTest {
             assertTrue(actualErrorMessage.contains(expectedErrorMessage));
         }
     }
-    @SuppressWarnings("unchecked")
     @Test
     public void testHandleFutureExecution_ExecutionException() {
         CompletableFuture<Void> future = new CompletableFuture<>();
@@ -63,7 +60,6 @@ public class SampleClientTest {
             assertTrue(actualErrorMessage.contains(expectedErrorMessage));
         }
     }
-    @SuppressWarnings("unchecked")
     @Test
     public void testCreateFhirClientForR4() {
         // Invoke the method under test
@@ -83,7 +79,6 @@ public class SampleClientTest {
         }
         assertTrue("LoggingInterceptor should be registered", interceptorRegistered);
     }
-    @SuppressWarnings("unchecked")
     @Test
     public void testReadLastNamesFromFile() {
         // Prepare test data
@@ -97,7 +92,6 @@ public class SampleClientTest {
         assertNotNull(lastNames);
         assertEquals(expectedLastNames, lastNames);
     }
-    @SuppressWarnings("unchecked")
     @Test(expected = RuntimeException.class)
     public void testReadLastNamesFromFile_FileNotFound() {
         String nonExistentFileName = "non_existent_file.txt";
@@ -110,7 +104,6 @@ public class SampleClientTest {
             throw e;
         }
     }
-    @SuppressWarnings("unchecked")
     @Test
     public void testPerformPatientSearch_ValidLastName() {
         // Prepare test data
@@ -125,7 +118,6 @@ public class SampleClientTest {
         // Verify the result
         assertEquals("Smith", patient.getNameFirstRep().getFamily());
     }
-    @SuppressWarnings("unchecked")
     @Test
     public void testPerformPatientSearch_InvalidLastName() {
         // Prepare test data
